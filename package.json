@@ -1,0 +1,54 @@
+{
+  "name": "rpiv-todo",
+  "version": "1.1.0",
+  "description": "Todo overlay extension for Pi CLI agent — visual task tracking in TUI with Claude-Code parity",
+  "type": "module",
+  "license": "MIT",
+  "author": "buihongduc132",
+  "contributors": [
+    "juicesharp (original)",
+    "walodayeet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buihongduc132/rpiv-todo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/buihongduc132/rpiv-todo/issues"
+  },
+  "homepage": "https://github.com/buihongduc132/rpiv-todo#readme",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "rpiv",
+    "todo",
+    "task-tracking"
+  ],
+  "scripts": {
+    "test": "vitest run --coverage",
+    "test:ci": "vitest run --coverage"
+  },
+  "files": [
+    "index.ts",
+    "todo.ts",
+    "todo-overlay.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.5",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}
