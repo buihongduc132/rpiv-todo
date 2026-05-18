@@ -20,11 +20,13 @@
   "keywords": [
     "pi-package",
     "pi-extension",
-    "rpiv",
+    "pi",
+    "pi-coding-agent",
     "todo",
     "task-tracking",
-    "pi",
-    "pi-coding-agent"
+    "rpiv",
+    "overlay",
+    "priority"
   ],
   "scripts": {
     "test": "vitest run --coverage",
