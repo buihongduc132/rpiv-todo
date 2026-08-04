@@ -11,7 +11,7 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { reconstructTodoState, registerTodosCommand, registerTodoTool, TOOL_NAME } from "./todo.js";
+import { __resetState, reconstructTodoState, registerTodosCommand, registerTodoTool, TOOL_NAME } from "./todo.js";
 import { TodoOverlay } from "./todo-overlay.js";
 
 export default function (pi: ExtensionAPI) {
@@ -43,6 +43,10 @@ export default function (pi: ExtensionAPI) {
 	pi.on("session_shutdown", async () => {
 		todoOverlay?.dispose();
 		todoOverlay = undefined;
+		// Invalidate cache so the next session_start reads fresh ctx.
+		// Without this, cachedSessionId/cachedBranch/activeSessionId pin
+		// the old session and a new session (/new) inherits old todos.
+		__resetState("__all__");
 	});
 
 	// Reads getTodos() at render time; do NOT call reconstructTodoState here
