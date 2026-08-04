@@ -9,6 +9,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import registerExtension from "./index.js";
 import {
 	__resetState,
 	activateSession,
@@ -895,5 +896,94 @@ describe("[REGRESSION] stale-ctx: reconstructTodoState caches session data", () 
 		const sessionId = getActiveSessionId();
 		expect(typeof sessionId).toBe("string");
 		expect(sessionId.length).toBeGreaterThan(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Phase 3: RED — Cross-session cache leak on /new
+//
+// Bug: module-level cachedSessionId/cachedBranch are set ONCE on first
+// reconstructTodoState call and never cleared by session_shutdown.
+// When pi-core creates a fresh session (/new), the extension module
+// persists → cachedSessionId pins the OLD session → new session
+// inherits OLD todos.
+// ---------------------------------------------------------------------------
+
+describe("[REGRESSION] cross-session leak: /new must clear todos", () => {
+	beforeEach(() => {
+		__resetState("__all__");
+	});
+
+	it("clears todos when a new session starts after shutdown", async () => {
+		// Build minimal fake ExtensionAPI — capture lifecycle handlers
+		const handlers = new Map<string, (...args: any[]) => Promise<void>>();
+		const fakePi = {
+			on: vi.fn((event: string, handler: (...args: any[]) => Promise<void>) => {
+				handlers.set(event, handler);
+			}),
+			registerTool: vi.fn(),
+			registerCommand: vi.fn(),
+		} as any;
+
+		// Register the extension (simulates pi loading the extension at startup)
+		registerExtension(fakePi);
+
+		// Verify lifecycle handlers were registered
+		expect(handlers.has("session_start")).toBe(true);
+		expect(handlers.has("session_shutdown")).toBe(true);
+
+		const sessionStartHandler = handlers.get("session_start")!;
+		const sessionShutdownHandler = handlers.get("session_shutdown")!;
+
+		// --- Session A: has 2 todos ---
+		const ctxA = {
+			cwd: "/tmp/test",
+			hasUI: false,
+			sessionManager: {
+				getSessionFile: () => "session-A",
+				getBranch: () =>
+					makeBranchWithTodos(
+						[
+							{ id: 1, subject: "Task A", status: "pending" as TaskStatus },
+							{ id: 2, subject: "Task B", status: "pending" as TaskStatus },
+						],
+						3,
+					),
+			},
+			ui: { notify: vi.fn() },
+		};
+
+		await sessionStartHandler({}, ctxA);
+
+		// Session A should have 2 todos — verifies setup is correct
+		expect(getActiveSessionId()).toBe("session-A");
+		expect(getTodos()).toHaveLength(2);
+
+		// --- Shutdown (simulates /new — pi-core tears down session) ---
+		await sessionShutdownHandler({});
+
+		// --- Session B: fresh session, empty branch ---
+		const ctxB = {
+			cwd: "/tmp/test",
+			hasUI: false,
+			sessionManager: {
+				getSessionFile: () => "session-B",
+				getBranch: () => [],
+			},
+			ui: { notify: vi.fn() },
+		};
+
+		await sessionStartHandler({}, ctxB);
+
+		// BUG: session_shutdown did NOT call __resetState(), so:
+		// - cachedSessionId is still "session-A" (never re-read from ctx)
+		// - cachedBranch is still session-A's branch (never re-read from ctx)
+		// - activeSessionId is set to cachedSessionId = "session-A"
+		// - session-A's state (2 tasks) is replayed from the stale cache
+		//
+		// After the fix, session_shutdown should clear the cache so that
+		// session_start for session-B reads fresh ctx and starts clean.
+		expect(getActiveSessionId()).toBe("session-B");
+		expect(getTodos()).toHaveLength(0);
 	});
 });
