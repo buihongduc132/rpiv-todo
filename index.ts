@@ -10,7 +10,7 @@
  * correctly after upgrade.
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { __resetState, reconstructTodoState, registerTodosCommand, registerTodoTool, TOOL_NAME } from "./todo.js";
 import { TodoOverlay } from "./todo-overlay.js";
 

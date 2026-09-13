@@ -2,7 +2,7 @@
  * todo-overlay.ts — Persistent widget showing todo list above the editor.
  *
  * Renders a persistent widget via Pi core's `ExtensionUIContext.setWidget`
- * contract (`@mariozechner/pi-coding-agent/dist/modes/interactive/interactive-mode.js:1288-1317`):
+ * contract (`@earendil-works/pi-coding-agent/dist/modes/interactive/interactive-mode.js:1288-1317`):
  * factory-form registration in widgetContainerAbove, register-once +
  * requestRender() refresh, 12-line collapse-not-scroll, auto-hide when empty.
  * No timer (todos have no animation), no status bar, no aging map.
@@ -12,8 +12,8 @@
  * branch is stale at that point (message_end runs after the extension event).
  */
 
-import type { ExtensionUIContext, Theme } from "@mariozechner/pi-coding-agent";
-import { type TUI, truncateToWidth } from "@mariozechner/pi-tui";
+import type { ExtensionUIContext, Theme } from "@earendil-works/pi-coding-agent";
+import { type TUI, truncateToWidth } from "@earendil-works/pi-tui";
 import { getTodos, type Task, type TaskStatus } from "./todo.js";
 
 // ---- Constants ----
